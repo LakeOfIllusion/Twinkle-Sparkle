@@ -1,0 +1,30 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.mainArea {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.leftPanel {
+  flex: 45;
+  min-width: 400px;
+}
+
+.middlePanel {
+  flex: 30;
+  min-width: 280px;
+  border-left: 1px solid #2a2a4a;
+  border-right: 1px solid #2a2a4a;
+}
+
+.rightPanel {
+  flex: 25;
+  min-width: 240px;
+}

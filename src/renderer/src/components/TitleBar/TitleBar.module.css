@@ -1,0 +1,57 @@
+.titleBar {
+  display: flex;
+  align-items: center;
+  height: 57px;
+  padding: 0 12px;
+  background: #1A1A2E;
+  -webkit-app-region: drag;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.settingsBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  -webkit-app-region: no-drag;
+  margin-right: 8px;
+}
+
+.settingsBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.title {
+  flex: 1;
+  font-size: 14px;
+  color: #888;
+}
+
+.windowControls {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.controlBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.controlBtn img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}

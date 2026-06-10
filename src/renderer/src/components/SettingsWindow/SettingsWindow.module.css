@@ -1,0 +1,119 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.window {
+  width: 563px;
+  background: #F8F8F8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon {
+  width: 39px;
+  height: 39px;
+  flex-shrink: 0;
+}
+
+.icon img {
+  width: 100%;
+  height: 100%;
+}
+
+.inputWrapper {
+  flex: 1;
+  position: relative;
+}
+
+.inputBg {
+  width: 100%;
+  height: 39px;
+}
+
+.field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  padding: 0 16px;
+  color: #333;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.pathBtn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 39px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modelRow {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+}
+
+.modelBtn {
+  width: 92px;
+  height: 103px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+
+.modelBtn:hover {
+  transform: scale(1.05);
+}
+
+.modelBtn img {
+  width: 100%;
+  height: 100%;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.saveBtn {
+  background: #16213e;
+  color: #fff;
+}
+
+.cancelBtn {
+  background: #e0e0e0;
+  color: #333;
+}

@@ -1,0 +1,189 @@
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1a1a2e;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 12px;
+  gap: 8px;
+  border-bottom: 1px solid #2a2a4a;
+  flex-shrink: 0;
+}
+
+.collapseBtn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.collapseBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.collapseBtn img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+}
+
+.searchInput {
+  flex: 1;
+  height: 28px;
+  padding: 0 10px;
+  background: #252545;
+  border: none;
+  border-radius: 4px;
+  color: #ccc;
+  font-size: 13px;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: #555;
+}
+
+.literatureList {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.literatureItem {
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #999;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.literatureItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.literatureItemActive {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+}
+
+/* Folder styles */
+
+.folderItem {
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.folderItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.folderDragOver {
+  background: rgba(100, 150, 255, 0.15);
+  outline: 1px solid rgba(100, 150, 255, 0.4);
+}
+
+.folderHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.folderName {
+  font-size: 13px;
+  color: #ccc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Indentation: first character of literature aligns with 3rd character of folder name */
+/* 2 Chinese characters (~2em) + chevron (16px) + gap (4px) */
+.indented {
+  padding-left: 46px;
+}
+
+.importArea {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2px 12px;
+  flex-shrink: 0;
+}
+
+.importBtn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.importBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.importBtn img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.5;
+}
+
+.dragOver {
+  outline: 2px dashed rgba(255, 255, 255, 0.3);
+  outline-offset: -2px;
+}
+
+.itemTitle {
+  font-size: 13px;
+  color: #ccc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemMeta {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.renameInput {
+  width: 100%;
+  height: 24px;
+  padding: 0 6px;
+  background: #252545;
+  border: 1px solid #4a4a8a;
+  border-radius: 3px;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+}
+
+.emptyHint {
+  text-align: center;
+  color: #555;
+  font-size: 13px;
+  padding: 24px 12px;
+  line-height: 1.6;
+}

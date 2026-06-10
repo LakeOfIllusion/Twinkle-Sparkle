@@ -1,0 +1,286 @@
+import { useState, useEffect, useRef } from 'react'
+import TitleBar from './components/TitleBar/TitleBar'
+import LeftPanel from './components/LeftPanel/LeftPanel'
+import MiddlePanel from './components/MiddlePanel/MiddlePanel'
+import RightPanel from './components/RightPanel/RightPanel'
+import SettingsWindow from './components/SettingsWindow/SettingsWindow'
+import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
+import { chat, buildAnnotationPrompt, buildStatusPrompt, buildSummaryPrompt } from './api/deepseek'
+import type { PdfViewerHandle } from './components/PdfViewer/PdfViewer'
+import styles from './App.module.css'
+
+type AIStatus = 'idle' | 'loading'
+
+function App() {
+  const [showSettings, setShowSettings] = useState(false)
+  const [selectedText, setSelectedText] = useState('')
+  const [selectedPageNum, setSelectedPageNum] = useState(1)
+  const [literature, setLiterature] = useState<LiteratureItem[]>([])
+  const [activeLiteratureId, setActiveLiteratureId] = useState<string | null>(null)
+  const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [aiStatus, setAIStatus] = useState<AIStatus>('idle')
+  const [statusMessage, setStatusMessage] = useState('让我们开始阅读吧！')
+  const [aiError, setAIError] = useState<string | null>(null)
+  const [scrollToText, setScrollToText] = useState<string | null>(null)
+  const [isSummarizing, setIsSummarizing] = useState(false)
+  const [showSummaryConfirm, setShowSummaryConfirm] = useState(false)
+  const [focusAnnotationId, setFocusAnnotationId] = useState<string | null>(null)
+  const pdfViewerRef = useRef<PdfViewerHandle>(null)
+
+  useEffect(() => {
+    window.electronAPI.getLiterature().then(setLiterature)
+  }, [])
+
+  useEffect(() => {
+    if (activeLiteratureId && !literature.some(l => l.id === activeLiteratureId)) {
+      setActiveLiteratureId(null)
+    }
+  }, [literature, activeLiteratureId])
+
+  useEffect(() => {
+    if (activeLiteratureId) {
+      window.electronAPI.getAnnotations(activeLiteratureId).then(setAnnotations)
+    } else {
+      setAnnotations([])
+    }
+    setSelectedText('')
+    setStatusMessage('让我们开始阅读吧！')
+  }, [activeLiteratureId])
+
+  const activeFilePath = literature.find(l => l.id === activeLiteratureId)?.filePath ?? ''
+
+  const handleLiteratureSelect = (item: LiteratureItem) => {
+    setActiveLiteratureId(item.id)
+  }
+
+  const handleLiteratureChange = (items: LiteratureItem[]) => {
+    setLiterature(items)
+  }
+
+  const handleTextSelect = (text: string, pageNum: number) => {
+    setSelectedText(text)
+    setSelectedPageNum(pageNum)
+  }
+
+  const handleSendMessage = async (userMessage: string) => {
+    if (!activeLiteratureId || aiStatus === 'loading') return
+
+    const settings = await window.electronAPI.getSettings()
+    if (!settings.apiKey) {
+      setAIError('请先在设置中配置 API Key')
+      return
+    }
+
+    const annotationId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+    const pending: Annotation = {
+      id: annotationId,
+      literatureId: activeLiteratureId,
+      selectedText,
+      userMessage,
+      aiResponse: '',
+      isFavorite: false,
+      createdAt: new Date().toISOString(),
+      pageNum: selectedPageNum,
+    }
+
+    const pendingList = await window.electronAPI.addAnnotation(pending)
+    setAnnotations(pendingList)
+    setAIStatus('loading')
+    setAIError(null)
+
+    try {
+      const messages = buildAnnotationPrompt(selectedText, userMessage)
+      const aiResponse = await chat(messages, {
+        apiKey: settings.apiKey,
+        model: settings.model,
+      })
+
+      const updated = await window.electronAPI.updateAnnotation(annotationId, activeLiteratureId, { aiResponse })
+      setAnnotations(updated)
+      setFocusAnnotationId(annotationId)
+
+      try {
+        const statusMessages = buildStatusPrompt(selectedText, aiResponse)
+        const companionMsg = await chat(statusMessages, {
+          apiKey: settings.apiKey,
+          model: 'flash',
+        })
+        setStatusMessage(companionMsg.slice(0, 30))
+      } catch {
+        setStatusMessage('批注已完成')
+      }
+    } catch (e: any) {
+      setAIError(e.message || 'AI 请求失败')
+    } finally {
+      setAIStatus('idle')
+    }
+  }
+
+  const handleToggleFavorite = async (annotationId: string) => {
+    if (!activeLiteratureId) return
+    const updated = await window.electronAPI.toggleFavorite(annotationId, activeLiteratureId)
+    setAnnotations(updated)
+  }
+
+  const handleLocateAnnotation = (annotationSelectedText: string) => {
+    setScrollToText(null)
+    setTimeout(() => setScrollToText(annotationSelectedText), 0)
+  }
+
+  const handleEditAnnotation = async (annotationId: string, newUserMessage: string) => {
+    if (!activeLiteratureId) return
+    const updated = await window.electronAPI.updateAnnotation(annotationId, activeLiteratureId, { userMessage: newUserMessage })
+    setAnnotations(updated)
+  }
+
+  const handleSelectAnnotationText = (text: string) => {
+    setSelectedText(text)
+  }
+
+  const handleDeleteAnnotation = async (annotationId: string) => {
+    if (!activeLiteratureId) return
+    const updated = await window.electronAPI.removeAnnotation(annotationId, activeLiteratureId)
+    setAnnotations(updated)
+  }
+
+  const handleRenameAnnotation = async (annotationId: string, customName: string) => {
+    if (!activeLiteratureId) return
+    const updated = await window.electronAPI.updateAnnotation(annotationId, activeLiteratureId, { customName })
+    setAnnotations(updated)
+  }
+
+  const handleSummarize = async () => {
+    if (!activeLiteratureId || aiStatus === 'loading' || isSummarizing) return
+    setShowSummaryConfirm(true)
+  }
+
+  const handleSummaryConfirm = async () => {
+    setShowSummaryConfirm(false)
+    if (!activeLiteratureId || aiStatus === 'loading') return
+
+    const settings = await window.electronAPI.getSettings()
+    if (!settings.apiKey) {
+      setAIError('请先在设置中配置 API Key')
+      return
+    }
+
+    const fullText = pdfViewerRef.current?.getFullText()
+    if (!fullText) {
+      setAIError('无法获取文献全文，请确认 PDF 已加载')
+      return
+    }
+
+    setIsSummarizing(true)
+    setAIStatus('loading')
+    setAIError(null)
+
+    const existingSummary = annotations.find(a => a.type === 'summary')
+    if (existingSummary) {
+      await window.electronAPI.removeAnnotation(existingSummary.id, activeLiteratureId)
+    }
+
+    const summaryId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+    const pending: Annotation = {
+      id: summaryId,
+      literatureId: activeLiteratureId,
+      selectedText: '',
+      userMessage: '',
+      aiResponse: '',
+      isFavorite: false,
+      createdAt: new Date().toISOString(),
+      type: 'summary',
+    }
+
+    try {
+      const pendingList = await window.electronAPI.addAnnotation(pending)
+      setAnnotations(pendingList)
+
+      const messages = buildSummaryPrompt(fullText, pendingList)
+      const aiResponse = await chat(messages, {
+        apiKey: settings.apiKey,
+        model: settings.model,
+      })
+
+      const updated = await window.electronAPI.updateAnnotation(summaryId, activeLiteratureId, { aiResponse })
+      setAnnotations(updated)
+      setFocusAnnotationId(summaryId)
+
+      try {
+        const statusMessages = buildStatusPrompt('全文总结', aiResponse)
+        const companionMsg = await chat(statusMessages, {
+          apiKey: settings.apiKey,
+          model: 'flash',
+        })
+        setStatusMessage(companionMsg.slice(0, 30))
+      } catch {
+        setStatusMessage('全文总结已完成')
+      }
+    } catch (e: any) {
+      setAIError(e.message || 'AI 请求失败')
+      await window.electronAPI.removeAnnotation(summaryId, activeLiteratureId)
+      const restored = await window.electronAPI.getAnnotations(activeLiteratureId)
+      setAnnotations(restored)
+    } finally {
+      setAIStatus('idle')
+      setIsSummarizing(false)
+    }
+  }
+
+  return (
+    <div className={styles.app}>
+      <TitleBar onSettings={() => setShowSettings(true)} />
+      <div className={styles.mainArea}>
+        <div className={styles.leftPanel}>
+          <LeftPanel
+            pdfViewerRef={pdfViewerRef}
+            filePath={activeFilePath}
+            aiStatus={aiStatus}
+            statusMessage={statusMessage}
+            annotations={annotations}
+            onTextSelect={handleTextSelect}
+            scrollToText={scrollToText}
+            onScrollComplete={() => setScrollToText(null)}
+            onSummarize={handleSummarize}
+          />
+        </div>
+        <div className={styles.middlePanel}>
+          <MiddlePanel
+            selectedText={selectedText}
+            annotations={annotations}
+            aiStatus={aiStatus}
+            aiError={aiError}
+            focusAnnotationId={focusAnnotationId}
+            onSendMessage={handleSendMessage}
+            onToggleFavorite={handleToggleFavorite}
+            onLocateAnnotation={handleLocateAnnotation}
+            onEditAnnotation={handleEditAnnotation}
+            onSelectAnnotationText={handleSelectAnnotationText}
+            onDismissError={() => setAIError(null)}
+            onDeleteAnnotation={handleDeleteAnnotation}
+            onRenameAnnotation={handleRenameAnnotation}
+          />
+        </div>
+        <div className={styles.rightPanel}>
+          <RightPanel
+            literature={literature}
+            activeLiteratureId={activeLiteratureId}
+            onSelectLiterature={handleLiteratureSelect}
+            onLiteratureChange={handleLiteratureChange}
+          />
+        </div>
+      </div>
+      {showSettings && <SettingsWindow onClose={() => setShowSettings(false)} />}
+      <ConfirmDialog
+        visible={showSummaryConfirm}
+        title="全文总结"
+        message="要对这篇文章进行总结吗？"
+        confirmText="确定"
+        cancelText="取消"
+        onConfirm={handleSummaryConfirm}
+        onCancel={() => setShowSummaryConfirm(false)}
+      />
+    </div>
+  )
+}
+
+export default App
