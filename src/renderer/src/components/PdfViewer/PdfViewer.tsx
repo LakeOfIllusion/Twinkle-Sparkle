@@ -99,6 +99,11 @@ const PdfViewer = forwardRef<PdfViewerHandle, PdfViewerProps>(function PdfViewer
     return pages.map(page => findHighlightIndices(page.textItems, annotations))
   }, [pages, annotations])
 
+  const favoriteHighlightMaps = useMemo(() => {
+    const favAnnotations = annotations.filter(a => a.isFavorite && a.selectedText)
+    return pages.map(page => findHighlightIndices(page.textItems, favAnnotations))
+  }, [pages, annotations])
+
   useEffect(() => {
     if (!filePath) {
       setPdfDoc(null)
@@ -334,6 +339,7 @@ const PdfViewer = forwardRef<PdfViewerHandle, PdfViewerProps>(function PdfViewer
               >
                 {page.textItems.map((item, idx) => {
                   const isHighlighted = highlightMaps[pageIdx]?.has(idx)
+                  const isFavorite = favoriteHighlightMaps[pageIdx]?.has(idx)
                   const isFlashing = flashText
                     ? page.textItems.map(t => t.str).join('').includes(flashText) && isHighlighted
                     : false
@@ -343,6 +349,7 @@ const PdfViewer = forwardRef<PdfViewerHandle, PdfViewerProps>(function PdfViewer
                       key={idx}
                       className={[
                         isHighlighted ? styles.highlighted : '',
+                        isFavorite ? styles.favoriteHighlighted : '',
                         isFlashing ? styles.flashHighlight : ''
                       ].filter(Boolean).join(' ') || undefined}
                       style={{
