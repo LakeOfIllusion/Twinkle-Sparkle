@@ -109,7 +109,12 @@
 
 .footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footerRight {
+  display: flex;
   gap: 12px;
 }
 
@@ -118,6 +123,7 @@
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
+  border: none;
 }
 
 .saveBtn {
@@ -128,4 +134,13 @@
 .cancelBtn {
   background: #e0e0e0;
   color: #333;
+}
+
+.exportCardBtn {
+  background: #3b3b8c;
+  color: #fff;
+}
+
+.exportCardBtn:hover {
+  opacity: 0.85;
 }

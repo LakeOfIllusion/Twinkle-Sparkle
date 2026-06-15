@@ -1,0 +1,239 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.window {
+  width: 760px;
+  max-height: 90vh;
+  background: #F8F8F8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  padding: 32px 36px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #16213e;
+  margin: 0;
+}
+
+.cardScroll {
+  display: flex;
+  justify-content: center;
+}
+
+/* ── Card ─────────────────────────────────────── */
+
+.card {
+  width: 680px;
+  min-height: 480px;
+  padding: 36px 32px 32px;
+  border-radius: 12px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.cardTitle {
+  font-size: 22px;
+  font-weight: 700;
+  text-align: left;
+  line-height: 1.5;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  transition: background 0.15s;
+}
+
+.cardTitle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cardTitleInput {
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.5);
+  background: transparent;
+  outline: none;
+  width: 100%;
+  padding: 4px 8px;
+  font-family: inherit;
+}
+
+.literatureList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.litTitle {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.columns {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+}
+
+.leftCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rightCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.colLabel {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* ── Card bubble replicas ─────────────────────── */
+
+.quoteBox {
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 12px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.userBubbleCard {
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 12px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.aiBubbleCard {
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  border-radius: 12px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.summaryBox {
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  border-radius: 12px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  word-break: break-all;
+  white-space: pre-wrap;
+  cursor: pointer;
+  position: relative;
+  flex: 1;
+  min-height: 120px;
+}
+
+.summaryBox:hover .summaryEditHint {
+  opacity: 1;
+}
+
+.summaryEditHint {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.summaryTextarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  border: none;
+  border-radius: 12px;
+  outline: 2px dashed rgba(255, 255, 255, 0.5);
+  background: transparent;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+  word-break: break-all;
+}
+
+/* ── Footer ───────────────────────────────────── */
+
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.exportBtn {
+  background: #16213e;
+  color: #fff;
+}
+
+.swapBtn {
+  background: #e8e8e8;
+  color: #333;
+}
+
+.colorBtn {
+  background: #e8e8e8;
+  color: #333;
+}
+
+.noAnnotations {
+  text-align: center;
+  font-size: 13px;
+  padding: 32px;
+  opacity: 0.5;
+}

@@ -8,11 +8,12 @@ interface Props {
   onClose: () => void
   onSave: () => void
   onSummarize: (goal: string) => Promise<string>
+  onExportCard: () => void
 }
 
 const PLACEHOLDER_SUMMARY = '请阅读完文件夹中的所有文献后再点击总结按钮'
 
-function FolderManageWindow({ folderId, folderName, onClose, onSave, onSummarize }: Props) {
+function FolderManageWindow({ folderId, folderName, onClose, onSave, onSummarize, onExportCard }: Props) {
   const toast = useToast()
   const [readingGoal, setReadingGoal] = useState('')
   const [summary, setSummary] = useState('')
@@ -47,7 +48,7 @@ function FolderManageWindow({ folderId, folderName, onClose, onSave, onSummarize
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.window} onClick={e => e.stopPropagation()}>
-        <h2 className={styles.title}>文件夹管理：{folderName}</h2>
+        <h2 className={styles.title}>文件夹管理</h2>
 
         {/* 阅读目标 */}
         <div className={styles.section}>
@@ -84,8 +85,13 @@ function FolderManageWindow({ folderId, folderName, onClose, onSave, onSummarize
 
         {/* 按钮 */}
         <div className={styles.footer}>
-          <button className={`${styles.btn} ${styles.cancelBtn}`} onClick={onClose}>取消</button>
-          <button className={`${styles.btn} ${styles.saveBtn}`} onClick={handleSave}>保存</button>
+          <button className={`${styles.btn} ${styles.exportCardBtn}`} onClick={onExportCard}>
+            导出阅读卡片
+          </button>
+          <div className={styles.footerRight}>
+            <button className={`${styles.btn} ${styles.cancelBtn}`} onClick={onClose}>取消</button>
+            <button className={`${styles.btn} ${styles.saveBtn}`} onClick={handleSave}>保存</button>
+          </div>
         </div>
       </div>
     </div>

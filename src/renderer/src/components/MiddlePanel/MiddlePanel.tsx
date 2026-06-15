@@ -19,7 +19,6 @@ interface MiddlePanelProps {
   onSendMessage: (userMessage: string) => void
   onToggleFavorite: (annotationId: string) => void
   onLocateAnnotation: (selectedText: string) => void
-  onEditAnnotation: (annotationId: string, newUserMessage: string) => void
   onSelectAnnotationText: (text: string) => void
   onDismissError: () => void
   onDeleteAnnotation: (annotationId: string) => void
@@ -37,7 +36,6 @@ function MiddlePanel({
   onSendMessage,
   onToggleFavorite,
   onLocateAnnotation,
-  onEditAnnotation,
   onSelectAnnotationText,
   onDismissError,
   onDeleteAnnotation,
@@ -48,15 +46,12 @@ function MiddlePanel({
   const [inputValue, setInputValue] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; annotationId: string } | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editValue, setEditValue] = useState('')
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Annotation | null>(null)
   const [scrollToAnnotationId, setScrollToAnnotationId] = useState<string | null>(null)
   const [followUpTargetId, setFollowUpTargetId] = useState<string | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const editInputRef = useRef<HTMLTextAreaElement>(null)
 
   const sortedAnnotations = [...annotations].sort((a, b) => {
     const pageA = a.pageNum ?? Infinity
@@ -72,13 +67,6 @@ function MiddlePanel({
     }
     prevCountRef.current = annotations.length
   }, [annotations])
-
-  useEffect(() => {
-    if (editingId && editInputRef.current) {
-      editInputRef.current.focus()
-      editInputRef.current.setSelectionRange(editValue.length, editValue.length)
-    }
-  }, [editingId])
 
   useEffect(() => {
     if (focusAnnotationId) {
@@ -125,38 +113,6 @@ function MiddlePanel({
   const handleContextMenu = (e: React.MouseEvent, annotationId: string) => {
     e.preventDefault()
     setContextMenu({ x: e.clientX, y: e.clientY, annotationId })
-  }
-
-  const startEdit = (annotationId: string) => {
-    const ann = annotations.find(a => a.id === annotationId)
-    if (ann) {
-      setEditValue(ann.userMessage)
-      setEditingId(annotationId)
-    }
-    setContextMenu(null)
-  }
-
-  const commitEdit = () => {
-    if (editingId && editValue.trim()) {
-      onEditAnnotation(editingId, editValue.trim())
-    }
-    setEditingId(null)
-    setEditValue('')
-  }
-
-  const cancelEdit = () => {
-    setEditingId(null)
-    setEditValue('')
-  }
-
-  const handleEditKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      commitEdit()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      cancelEdit()
-    }
   }
 
   // ── Manage view handlers ────────────────────────────
@@ -234,7 +190,6 @@ function MiddlePanel({
               if (ann) onLocateAnnotation(ann.selectedText)
               setContextMenu(null)
             }},
-          { label: '编辑批注', onClick: () => startEdit(currentContextMenuAnnotationId!) },
         ]
       })()
     : []
@@ -318,29 +273,12 @@ function MiddlePanel({
                   onContextMenu={(e) => handleContextMenu(e, a.id)}
                 >
                   <div className={styles.summaryLabel}>{num}</div>
-                  {editingId === a.id ? (
-                    <div className={`${styles.bubble} ${styles.userBubble} ${styles.editBubble}`}>
-                      <textarea
-                        ref={editInputRef}
-                        className={styles.editInput}
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onKeyDown={handleEditKeyDown}
-                        rows={3}
-                      />
-                      <div className={styles.editActions}>
-                        <button className={styles.editSaveBtn} onClick={commitEdit}>保存</button>
-                        <button className={styles.editCancelBtn} onClick={cancelEdit}>取消</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className={`${styles.bubble} ${styles.userBubble} ${styles.clickableBubble}`}
-                      onClick={() => { onSelectAnnotationText(a.selectedText); setFollowUpTargetId(a.id) }}
-                    >
-                      {a.userMessage}
-                    </div>
-                  )}
+                  <div
+                    className={`${styles.bubble} ${styles.userBubble} ${styles.clickableBubble}`}
+                    onClick={() => { onSelectAnnotationText(a.selectedText); setFollowUpTargetId(a.id) }}
+                  >
+                    {a.userMessage}
+                  </div>
                   <div
                     className={`${styles.bubble} ${styles.aiBubble} ${styles.clickableBubble}`}
                     onClick={() => { onSelectAnnotationText(a.selectedText); setFollowUpTargetId(a.id) }}

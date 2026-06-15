@@ -331,65 +331,6 @@
   height: 36px;
 }
 
-/* ── Edit bubble ─────────────────────────────────── */
-
-.editBubble {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.editInput {
-  width: 100%;
-  resize: vertical;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 13px;
-  line-height: 1.5;
-  font-family: inherit;
-  outline: none;
-  background: #fff;
-  color: #333;
-}
-
-.editInput:focus {
-  border-color: #888;
-}
-
-.editActions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.editSaveBtn,
-.editCancelBtn {
-  padding: 4px 14px;
-  border-radius: 4px;
-  font-size: 12px;
-  transition: background 0.15s;
-}
-
-.editSaveBtn {
-  background: #3b3b8c;
-  color: #fff;
-}
-
-.editSaveBtn:hover {
-  background: #4c4c9e;
-}
-
-.editCancelBtn {
-  background: transparent;
-  color: #999;
-  border: 1px solid #ddd;
-}
-
-.editCancelBtn:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
 /* ── Manage view ─────────────────────────────────── */
 
 .manageArea {

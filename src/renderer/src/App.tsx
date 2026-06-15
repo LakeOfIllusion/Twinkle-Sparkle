@@ -6,9 +6,10 @@ import RightPanel from './components/RightPanel/RightPanel'
 import SettingsWindow from './components/SettingsWindow/SettingsWindow'
 import FolderManageWindow from './components/FolderManageWindow/FolderManageWindow'
 import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
-import { chat, buildAnnotationPrompt, buildStatusPrompt, buildSummaryPrompt, buildFollowUpPrompt, buildFolderSummaryPrompt } from './api/deepseek'
+import { chat, buildAnnotationPrompt, buildStatusPrompt, buildSummaryPrompt, buildFollowUpPrompt, buildFolderSummaryPrompt, buildReadingGoalTitle } from './api/deepseek'
 import type { FolderDocInfo } from './api/deepseek'
 import type { PdfViewerHandle } from './components/PdfViewer/PdfViewer'
+import CardEditWindow from './components/CardEditWindow/CardEditWindow'
 import styles from './App.module.css'
 
 type AIStatus = 'idle' | 'loading'
@@ -29,6 +30,12 @@ function App() {
   const [focusAnnotationId, setFocusAnnotationId] = useState<string | null>(null)
   const pdfViewerRef = useRef<PdfViewerHandle>(null)
   const [manageFolder, setManageFolder] = useState<LiteratureItem | null>(null)
+  const [cardEditData, setCardEditData] = useState<{
+    readingGoalTitle: string
+    literatureTitles: string[]
+    favoriteAnnotations: { selectedText: string; userMessage: string; aiResponse: string }[]
+    folderSummary: string
+  } | null>(null)
 
   useEffect(() => {
     window.electronAPI.getLiterature().then(setLiterature)
@@ -210,12 +217,6 @@ function App() {
     setTimeout(() => setScrollToText(annotationSelectedText), 0)
   }
 
-  const handleEditAnnotation = async (annotationId: string, newUserMessage: string) => {
-    if (!activeLiteratureId) return
-    const updated = await window.electronAPI.updateAnnotation(annotationId, activeLiteratureId, { userMessage: newUserMessage })
-    setAnnotations(updated)
-  }
-
   const handleSelectAnnotationText = (text: string) => {
     setSelectedText(text)
   }
@@ -342,6 +343,55 @@ function App() {
     return chat(messages, { apiKey: settings.apiKey, model: settings.model })
   }
 
+  const handleExportCard = async (folderId: string) => {
+    const settings = await window.electronAPI.getSettings()
+    if (!settings.apiKey) {
+      setAIError('请先在设置中配置 API Key')
+      return
+    }
+
+    const meta = await window.electronAPI.getFolderMeta(folderId)
+    const children = literature.filter(l => l.parentId === folderId)
+    const literatureTitles = children.map(c => c.title)
+
+    const favoriteAnnotations: { selectedText: string; userMessage: string; aiResponse: string }[] = []
+    for (const child of children) {
+      const anns = await window.electronAPI.getAnnotations(child.id)
+      anns.filter(a => a.isFavorite && a.selectedText && a.aiResponse).forEach(a => {
+        favoriteAnnotations.push({
+          selectedText: a.selectedText,
+          userMessage: a.userMessage,
+          aiResponse: a.aiResponse,
+        })
+      })
+    }
+
+    if (favoriteAnnotations.length === 0) {
+      setAIError('该文件夹下没有已收藏的批注，请先点亮批注后再导出阅读卡片')
+      return
+    }
+
+    let title: string
+    if (meta.readingGoal) {
+      try {
+        const titleMessages = buildReadingGoalTitle(meta.readingGoal)
+        title = await chat(titleMessages, { apiKey: settings.apiKey, model: 'flash' })
+      } catch {
+        title = meta.readingGoal.slice(0, 20)
+      }
+    } else {
+      title = '阅读卡片'
+    }
+
+    setManageFolder(null)
+    setCardEditData({
+      readingGoalTitle: title,
+      literatureTitles,
+      favoriteAnnotations,
+      folderSummary: meta.summary || '',
+    })
+  }
+
   return (
     <div className={styles.app}>
       <TitleBar onSettings={() => setShowSettings(true)} />
@@ -369,7 +419,6 @@ function App() {
             onSendMessage={handleSendMessage}
             onToggleFavorite={handleToggleFavorite}
             onLocateAnnotation={handleLocateAnnotation}
-            onEditAnnotation={handleEditAnnotation}
             onSelectAnnotationText={handleSelectAnnotationText}
             onDismissError={() => setAIError(null)}
             onDeleteAnnotation={handleDeleteAnnotation}
@@ -396,6 +445,16 @@ function App() {
           onClose={() => setManageFolder(null)}
           onSave={() => {}}
           onSummarize={(goal) => handleFolderSummarize(manageFolder.id, goal)}
+          onExportCard={() => handleExportCard(manageFolder.id)}
+        />
+      )}
+      {cardEditData && (
+        <CardEditWindow
+          readingGoalTitle={cardEditData.readingGoalTitle}
+          literatureTitles={cardEditData.literatureTitles}
+          favoriteAnnotations={cardEditData.favoriteAnnotations}
+          folderSummary={cardEditData.folderSummary}
+          onClose={() => setCardEditData(null)}
         />
       )}
       <ConfirmDialog

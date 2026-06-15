@@ -198,3 +198,20 @@ export function buildFolderSummaryPrompt(
     },
   ]
 }
+
+export function buildReadingGoalTitle(readingGoal: string) {
+  return [
+    {
+      role: 'system' as const,
+      content: `你是一位学术编辑。请将用户的阅读目标总结为一句简练的标题，规则如下：
+- 10~20字，直接呈现，不要加引号或书名号
+- 抓住用户最关心的核心问题或探索方向
+- 语气坚定、有方向感，像一个研究课题的标题
+- 中文回复`,
+    },
+    {
+      role: 'user' as const,
+      content: `用户的阅读目标：${readingGoal}`,
+    },
+  ]
+}

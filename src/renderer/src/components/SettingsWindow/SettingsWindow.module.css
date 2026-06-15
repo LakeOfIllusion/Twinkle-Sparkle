@@ -16,83 +16,123 @@
   padding: 40px 48px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #16213e;
+  margin: 0;
 }
 
 .section {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.icon {
-  width: 39px;
-  height: 39px;
-  flex-shrink: 0;
+.label {
+  font-size: 13px;
+  color: #555;
 }
 
-.icon img {
-  width: 100%;
-  height: 100%;
-}
-
-.inputWrapper {
-  flex: 1;
-  position: relative;
-}
-
-.inputBg {
+.input {
   width: 100%;
   height: 39px;
-}
-
-.field {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  padding: 0 16px;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
   color: #333;
+  background: #fff;
   outline: none;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
-.pathBtn {
-  position: absolute;
-  right: 0;
-  top: 0;
+.input:focus {
+  border-color: #16213e;
+}
+
+.input::placeholder {
+  color: #aaa;
+}
+
+.pathRow {
+  display: flex;
+  gap: 8px;
+}
+
+.pathInput {
+  flex: 1;
   height: 39px;
+  padding: 0 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.pathInput:focus {
+  border-color: #16213e;
+}
+
+.browseBtn {
   width: 40px;
+  height: 39px;
+  flex-shrink: 0;
+  background: #e8e8e8;
+  border-radius: 6px;
+  font-size: 18px;
+  color: #555;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.browseBtn:hover {
+  background: #ddd;
 }
 
 .modelRow {
   display: flex;
-  justify-content: center;
-  gap: 60px;
+  gap: 12px;
 }
 
 .modelBtn {
-  width: 92px;
-  height: 103px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s;
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fff;
+  color: #888;
+  border: 1px solid #ddd;
 }
 
 .modelBtn:hover {
-  transform: scale(1.05);
+  border-color: #aaa;
+  color: #555;
 }
 
-.modelBtn img {
-  width: 100%;
-  height: 100%;
+.modelBtnActive {
+  background: #16213e;
+  color: #fff;
+  border-color: #16213e;
+}
+
+.modelBtnActive:hover {
+  color: #fff;
 }
 
 .footer {
@@ -106,6 +146,7 @@
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
+  border: none;
 }
 
 .saveBtn {
