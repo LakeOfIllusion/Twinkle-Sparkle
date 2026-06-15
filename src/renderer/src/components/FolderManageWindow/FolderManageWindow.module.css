@@ -1,0 +1,131 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.window {
+  width: 563px;
+  background: #F8F8F8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #16213e;
+  margin: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 13px;
+  color: #555;
+}
+
+.goalInput {
+  width: 100%;
+  height: 72px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  outline: none;
+  resize: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.goalInput::placeholder {
+  color: #aaa;
+}
+
+.goalInput:focus {
+  border-color: #16213e;
+}
+
+.summaryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summarizeBtn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  background: #16213e;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.summarizeBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.summarizeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.summaryBox {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+  line-height: 1.7;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+}
+
+.summaryEmpty {
+  color: #aaa;
+}
+
+.generating {
+  color: #888;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.saveBtn {
+  background: #16213e;
+  color: #fff;
+}
+
+.cancelBtn {
+  background: #e0e0e0;
+  color: #333;
+}

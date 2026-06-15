@@ -76,7 +76,11 @@ AI回复要点：总结了研究的局限性
   ]
 }
 
-export function buildAnnotationPrompt(selectedText: string, userMessage: string) {
+export function buildAnnotationPrompt(selectedText: string, userMessage: string, readingGoal?: string) {
+  const goalHint = readingGoal
+    ? `\n- 用户当前的阅读目标是：${readingGoal}。在回复中可以适当回应用户的这一研究兴趣，但不要生硬地套用。`
+    : ''
+
   return [
     {
       role: 'system' as const,
@@ -84,11 +88,44 @@ export function buildAnnotationPrompt(selectedText: string, userMessage: string)
 - 直接回答问题，不要"您提出了很好的问题""这是一个值得探讨的话题""您的"之类开头语
 - 不要分点列举，写成连贯的1~2段
 - 总字数不超过500字
-- 中文回复`,
+- 中文回复${goalHint}`,
     },
     {
       role: 'user' as const,
       content: `文献选文："${selectedText}"\n\n用户批注：${userMessage}`,
+    },
+  ]
+}
+
+export function buildFollowUpPrompt(
+  selectedText: string,
+  userMessage: string,
+  aiResponse: string,
+  followUpMessages: FollowUpMessage[],
+  newQuestion: string,
+  readingGoal?: string
+) {
+  const history = followUpMessages
+    .map(m => `${m.role === 'user' ? '用户追问' : 'AI回答'}：${m.content}`)
+    .join('\n')
+
+  const goalHint = readingGoal
+    ? `\n- 用户当前的阅读目标是：${readingGoal}。在回复中可以适当回应用户的这一研究兴趣，但不要生硬地套用。`
+    : ''
+
+  return [
+    {
+      role: 'system' as const,
+      content: `你是一位学术研究助手，正在和用户就一篇文献中的某段内容进行多轮讨论。回复规则：
+- 直接回答问题，不要"您提出了很好的问题""这是一个值得探讨的话题""您的"之类开头语
+- 不要分点列举，写成连贯的1~2段
+- 总字数不超过500字
+- 中文回复
+- 结合之前的对话上下文进行回复${goalHint}`,
+    },
+    {
+      role: 'user' as const,
+      content: `文献选文："${selectedText}"\n\n用户最初批注：${userMessage}\n\nAI最初回复：${aiResponse}\n\n后续对话：\n${history}\n\n用户追问：${newQuestion}`,
     },
   ]
 }
@@ -119,6 +156,45 @@ export function buildSummaryPrompt(fullText: string, annotations: Annotation[]) 
     {
       role: 'user' as const,
       content: `全文内容：\n${fullText.slice(0, 8000)}\n\n已有批注记录：\n${annotationSummary || '暂无批注'}`,
+    },
+  ]
+}
+
+export interface FolderDocInfo {
+  title: string
+  annotations: { selectedText: string; userMessage: string; aiResponse: string }[]
+}
+
+export function buildFolderSummaryPrompt(
+  readingGoal: string,
+  docs: FolderDocInfo[]
+) {
+  const docSummaries = docs.map((d, i) => {
+    const annText = d.annotations
+      .map(a => `  选文：${a.selectedText.slice(0, 150)}\n  提问：${a.userMessage.slice(0, 150)}\n  回复：${a.aiResponse.slice(0, 200)}`)
+      .join('\n')
+    return `文献${i + 1}：《${d.title}》\n批注记录：\n${annText || '  暂无批注'}`
+  }).join('\n\n')
+
+  const goalPrompt = readingGoal
+    ? `你的阅读目标是：${readingGoal}\n请在总结中结合这个目标，评估这些文献在多大程度上回应了你关心的问题。`
+    : ''
+
+  return [
+    {
+      role: 'system' as const,
+      content: `你是一位学术研究助手，也是用户的共读伙伴。请直接写一篇总结，规则如下：
+- 立即进入正题，不要"基于""以下""根据"之类开头语
+- 第一段：简要概括这批文献共同关注的主题或问题领域
+- 第二段：用第二人称"你"称呼读者，说说你在阅读中重点关注了哪些方面，有哪些跨文献的发现或关联
+- 第三段：推荐1~2个可以进一步阅读的方向或具体研究问题
+- 不要使用"用户""读者""批注者"等第三人称，始终保持与"你"对话的感觉
+- 总字数200字左右
+- 中文回复`,
+    },
+    {
+      role: 'user' as const,
+      content: `${goalPrompt}\n\n文献及批注汇总：\n\n${docSummaries}`,
     },
   ]
 }

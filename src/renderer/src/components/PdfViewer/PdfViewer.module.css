@@ -65,15 +65,15 @@
   color: transparent;
 }
 
-.highlighted {
-  background: rgba(255, 200, 50, 0.18);
-}
-
-.favoriteHighlighted {
+.annotationMark {
   text-decoration: underline wavy;
   text-decoration-color: #000;
   text-underline-offset: 1px;
   text-decoration-thickness: 0.5px;
+}
+
+.favoriteMark {
+  background: rgba(255, 200, 50, 0.18);
 }
 
 .flashHighlight {

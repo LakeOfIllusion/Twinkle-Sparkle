@@ -4,8 +4,10 @@ import LeftPanel from './components/LeftPanel/LeftPanel'
 import MiddlePanel from './components/MiddlePanel/MiddlePanel'
 import RightPanel from './components/RightPanel/RightPanel'
 import SettingsWindow from './components/SettingsWindow/SettingsWindow'
+import FolderManageWindow from './components/FolderManageWindow/FolderManageWindow'
 import ConfirmDialog from './components/ConfirmDialog/ConfirmDialog'
-import { chat, buildAnnotationPrompt, buildStatusPrompt, buildSummaryPrompt } from './api/deepseek'
+import { chat, buildAnnotationPrompt, buildStatusPrompt, buildSummaryPrompt, buildFollowUpPrompt, buildFolderSummaryPrompt } from './api/deepseek'
+import type { FolderDocInfo } from './api/deepseek'
 import type { PdfViewerHandle } from './components/PdfViewer/PdfViewer'
 import styles from './App.module.css'
 
@@ -26,6 +28,7 @@ function App() {
   const [showSummaryConfirm, setShowSummaryConfirm] = useState(false)
   const [focusAnnotationId, setFocusAnnotationId] = useState<string | null>(null)
   const pdfViewerRef = useRef<PdfViewerHandle>(null)
+  const [manageFolder, setManageFolder] = useState<LiteratureItem | null>(null)
 
   useEffect(() => {
     window.electronAPI.getLiterature().then(setLiterature)
@@ -89,7 +92,13 @@ function App() {
     setAIError(null)
 
     try {
-      const messages = buildAnnotationPrompt(selectedText, userMessage)
+      const activeItem = literature.find(l => l.id === activeLiteratureId)
+      const parentFolderId = activeItem?.parentId
+      let readingGoal = ''
+      if (parentFolderId) {
+        readingGoal = (await window.electronAPI.getFolderMeta(parentFolderId)).readingGoal
+      }
+      const messages = buildAnnotationPrompt(selectedText, userMessage, readingGoal || undefined)
       const aiResponse = await chat(messages, {
         apiKey: settings.apiKey,
         model: settings.model,
@@ -108,6 +117,80 @@ function App() {
         setStatusMessage(companionMsg.slice(0, 30))
       } catch {
         setStatusMessage('批注已完成')
+      }
+    } catch (e: any) {
+      setAIError(e.message || 'AI 请求失败')
+    } finally {
+      setAIStatus('idle')
+    }
+  }
+
+  const handleFollowUp = async (annotationId: string, question: string) => {
+    if (!activeLiteratureId || aiStatus === 'loading') return
+
+    const annotation = annotations.find(a => a.id === annotationId)
+    if (!annotation) return
+
+    const settings = await window.electronAPI.getSettings()
+    if (!settings.apiKey) {
+      setAIError('请先在设置中配置 API Key')
+      return
+    }
+
+    const userMsg: FollowUpMessage = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      role: 'user',
+      content: question,
+      createdAt: new Date().toISOString(),
+    }
+
+    const followUpMessages = [...(annotation.followUpMessages || []), userMsg]
+    const updatedWithUser = await window.electronAPI.updateAnnotation(annotationId, activeLiteratureId, { followUpMessages })
+    setAnnotations(updatedWithUser)
+    setAIStatus('loading')
+    setAIError(null)
+
+    try {
+      const activeLit = literature.find(l => l.id === activeLiteratureId)
+      const parentFid = activeLit?.parentId
+      let fGoal = ''
+      if (parentFid) {
+        fGoal = (await window.electronAPI.getFolderMeta(parentFid)).readingGoal
+      }
+      const messages = buildFollowUpPrompt(
+        annotation.selectedText,
+        annotation.userMessage,
+        annotation.aiResponse,
+        followUpMessages.slice(0, -1),
+        question,
+        fGoal || undefined
+      )
+      const aiReply = await chat(messages, {
+        apiKey: settings.apiKey,
+        model: settings.model,
+      })
+
+      const aiMsg: FollowUpMessage = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        role: 'assistant',
+        content: aiReply,
+        createdAt: new Date().toISOString(),
+      }
+
+      const final = await window.electronAPI.updateAnnotation(annotationId, activeLiteratureId, {
+        followUpMessages: [...followUpMessages, aiMsg],
+      })
+      setAnnotations(final)
+
+      try {
+        const statusMessages = buildStatusPrompt(annotation.selectedText, aiReply)
+        const companionMsg = await chat(statusMessages, {
+          apiKey: settings.apiKey,
+          model: 'flash',
+        })
+        setStatusMessage(companionMsg.slice(0, 30))
+      } catch {
+        setStatusMessage('追问已完成')
       }
     } catch (e: any) {
       setAIError(e.message || 'AI 请求失败')
@@ -149,13 +232,7 @@ function App() {
     setAnnotations(updated)
   }
 
-  const handleSummarize = async () => {
-    if (!activeLiteratureId || aiStatus === 'loading' || isSummarizing) return
-    setShowSummaryConfirm(true)
-  }
-
-  const handleSummaryConfirm = async () => {
-    setShowSummaryConfirm(false)
+  const doSummarize = async () => {
     if (!activeLiteratureId || aiStatus === 'loading') return
 
     const settings = await window.electronAPI.getSettings()
@@ -226,6 +303,45 @@ function App() {
     }
   }
 
+  const handleSummarize = async () => {
+    if (!activeLiteratureId || aiStatus === 'loading' || isSummarizing) return
+    setShowSummaryConfirm(true)
+  }
+
+  const handleSummaryConfirm = async () => {
+    setShowSummaryConfirm(false)
+    await doSummarize()
+  }
+
+  const handleReSummarize = async () => {
+    await doSummarize()
+  }
+
+  const handleFolderSummarize = async (folderId: string, readingGoal: string): Promise<string> => {
+    const settings = await window.electronAPI.getSettings()
+    if (!settings.apiKey) throw new Error('请先在设置中配置 API Key')
+
+    const children = literature.filter(l => l.parentId === folderId)
+    const docs: FolderDocInfo[] = []
+
+    for (const child of children) {
+      const anns = await window.electronAPI.getAnnotations(child.id)
+      docs.push({
+        title: child.title,
+        annotations: anns
+          .filter(a => a.type !== 'summary')
+          .map(a => ({
+            selectedText: a.selectedText,
+            userMessage: a.userMessage,
+            aiResponse: a.aiResponse,
+          })),
+      })
+    }
+
+    const messages = buildFolderSummaryPrompt(readingGoal, docs)
+    return chat(messages, { apiKey: settings.apiKey, model: settings.model })
+  }
+
   return (
     <div className={styles.app}>
       <TitleBar onSettings={() => setShowSettings(true)} />
@@ -258,6 +374,8 @@ function App() {
             onDismissError={() => setAIError(null)}
             onDeleteAnnotation={handleDeleteAnnotation}
             onRenameAnnotation={handleRenameAnnotation}
+            onReSummarize={handleReSummarize}
+            onFollowUp={handleFollowUp}
           />
         </div>
         <div className={styles.rightPanel}>
@@ -266,10 +384,20 @@ function App() {
             activeLiteratureId={activeLiteratureId}
             onSelectLiterature={handleLiteratureSelect}
             onLiteratureChange={handleLiteratureChange}
+            onManageFolder={setManageFolder}
           />
         </div>
       </div>
       {showSettings && <SettingsWindow onClose={() => setShowSettings(false)} />}
+      {manageFolder && (
+        <FolderManageWindow
+          folderId={manageFolder.id}
+          folderName={manageFolder.title}
+          onClose={() => setManageFolder(null)}
+          onSave={() => {}}
+          onSummarize={(goal) => handleFolderSummarize(manageFolder.id, goal)}
+        />
+      )}
       <ConfirmDialog
         visible={showSummaryConfirm}
         title="全文总结"

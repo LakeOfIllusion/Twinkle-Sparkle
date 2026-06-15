@@ -18,6 +18,18 @@ interface LiteratureItem {
   isCollapsed?: boolean
 }
 
+interface FolderMeta {
+  readingGoal: string
+  summary: string
+}
+
+interface FollowUpMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  createdAt: string
+}
+
 interface Annotation {
   id: string
   literatureId: string
@@ -29,6 +41,7 @@ interface Annotation {
   pageNum?: number
   customName?: string
   type?: 'normal' | 'summary'
+  followUpMessages?: FollowUpMessage[]
 }
 
 interface Window {
@@ -47,6 +60,8 @@ interface Window {
     updateAnnotation: (id: string, literatureId: string, updates: Partial<Annotation>) => Promise<Annotation[]>
     toggleFavorite: (id: string, literatureId: string) => Promise<Annotation[]>
     removeAnnotation: (id: string, literatureId: string) => Promise<Annotation[]>
+    getFolderMeta: (folderId: string) => Promise<FolderMeta>
+    setFolderMeta: (folderId: string, meta: Partial<FolderMeta>) => Promise<FolderMeta>
     readPdf: (filePath: string) => Promise<string | null>
     selectFolder: () => Promise<string | null>
     selectPdf: () => Promise<string | null>

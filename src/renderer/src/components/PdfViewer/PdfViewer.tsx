@@ -95,11 +95,11 @@ const PdfViewer = forwardRef<PdfViewerHandle, PdfViewerProps>(function PdfViewer
     getFullText: () => pages.map(p => p.textItems.map(t => t.str).join('')).join('\n')
   }), [pages])
 
-  const highlightMaps = useMemo(() => {
+  const annotationMaps = useMemo(() => {
     return pages.map(page => findHighlightIndices(page.textItems, annotations))
   }, [pages, annotations])
 
-  const favoriteHighlightMaps = useMemo(() => {
+  const favoriteMaps = useMemo(() => {
     const favAnnotations = annotations.filter(a => a.isFavorite && a.selectedText)
     return pages.map(page => findHighlightIndices(page.textItems, favAnnotations))
   }, [pages, annotations])
@@ -338,18 +338,18 @@ const PdfViewer = forwardRef<PdfViewerHandle, PdfViewerProps>(function PdfViewer
                 style={{ width: page.width, height: page.height }}
               >
                 {page.textItems.map((item, idx) => {
-                  const isHighlighted = highlightMaps[pageIdx]?.has(idx)
-                  const isFavorite = favoriteHighlightMaps[pageIdx]?.has(idx)
+                  const isAnnotated = annotationMaps[pageIdx]?.has(idx)
+                  const isFavorite = favoriteMaps[pageIdx]?.has(idx)
                   const isFlashing = flashText
-                    ? page.textItems.map(t => t.str).join('').includes(flashText) && isHighlighted
+                    ? page.textItems.map(t => t.str).join('').includes(flashText) && isAnnotated
                     : false
 
                   return (
                     <span
                       key={idx}
                       className={[
-                        isHighlighted ? styles.highlighted : '',
-                        isFavorite ? styles.favoriteHighlighted : '',
+                        isAnnotated ? styles.annotationMark : '',
+                        isFavorite ? styles.favoriteMark : '',
                         isFlashing ? styles.flashHighlight : ''
                       ].filter(Boolean).join(' ') || undefined}
                       style={{

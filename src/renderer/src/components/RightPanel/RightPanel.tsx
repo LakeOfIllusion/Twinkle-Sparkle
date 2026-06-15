@@ -13,6 +13,7 @@ interface Props {
   activeLiteratureId: string | null
   onSelectLiterature: (item: LiteratureItem) => void
   onLiteratureChange: (items: LiteratureItem[]) => void
+  onManageFolder: (folder: LiteratureItem) => void
 }
 
 interface CtxMenu {
@@ -21,7 +22,7 @@ interface CtxMenu {
   item?: LiteratureItem
 }
 
-function RightPanel({ literature, activeLiteratureId, onSelectLiterature, onLiteratureChange }: Props) {
+function RightPanel({ literature, activeLiteratureId, onSelectLiterature, onLiteratureChange, onManageFolder }: Props) {
   const toast = useToast()
   const panelRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -266,11 +267,24 @@ function RightPanel({ literature, activeLiteratureId, onSelectLiterature, onLite
     setContextMenu({ x: e.clientX, y: e.clientY })
   }
 
+  const handleManageFolder = () => {
+    if (!contextMenu?.item) return
+    const folder = contextMenu.item
+    setContextMenu(null)
+    onManageFolder(folder)
+  }
+
   const contextMenuItems: ContextMenuItem[] = contextMenu?.item
-    ? [
-        { label: '重命名', onClick: handleRename },
-        { label: '删除', onClick: handleDeleteClick, danger: true }
-      ]
+    ? contextMenu.item.type === 'folder'
+      ? [
+          { label: '文件夹管理', onClick: handleManageFolder },
+          { label: '重命名', onClick: handleRename },
+          { label: '删除', onClick: handleDeleteClick, danger: true }
+        ]
+      : [
+          { label: '重命名', onClick: handleRename },
+          { label: '删除', onClick: handleDeleteClick, danger: true }
+        ]
     : [
         { label: '新建文件夹', onClick: handleCreateFolder }
       ]

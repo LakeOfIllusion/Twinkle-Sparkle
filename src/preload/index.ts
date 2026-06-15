@@ -33,6 +33,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectPdf: () => ipcRenderer.invoke('dialog:select-pdf'),
   copyPdfToStorage: (sourcePath: string) => ipcRenderer.invoke('file:copy-pdf', sourcePath),
 
+  // Folder meta
+  getFolderMeta: (folderId: string) => ipcRenderer.invoke('store:get-folder-meta', folderId),
+  setFolderMeta: (folderId: string, meta: Record<string, unknown>) =>
+    ipcRenderer.invoke('store:set-folder-meta', folderId, meta),
+
   // File path from drag-drop (contextIsolation 下 File.path 不可用)
   getFilePath: (file: File) => webUtils.getPathForFile(file)
 })

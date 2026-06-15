@@ -42,6 +42,18 @@ export interface LiteratureItem {
   isCollapsed?: boolean
 }
 
+export interface FolderMeta {
+  readingGoal: string
+  summary: string
+}
+
+export interface FollowUpMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  createdAt: string
+}
+
 export interface Annotation {
   id: string
   literatureId: string
@@ -53,6 +65,7 @@ export interface Annotation {
   pageNum?: number
   customName?: string
   type?: 'normal' | 'summary'
+  followUpMessages?: FollowUpMessage[]
 }
 
 // ── Settings ───────────────────────────────────────
@@ -146,4 +159,19 @@ export function removeAnnotation(id: string, literatureId: string): Annotation[]
   data.items = data.items.filter(it => it.id !== id)
   writeJSON(`annotations-${literatureId}.json`, data)
   return data.items
+}
+
+// ── Folder Meta ────────────────────────────────────
+
+const DEFAULT_FOLDER_META: FolderMeta = {
+  readingGoal: '',
+  summary: ''
+}
+
+export function getFolderMeta(folderId: string): FolderMeta {
+  return readJSON<FolderMeta>(`folder-meta-${folderId}.json`, DEFAULT_FOLDER_META)
+}
+
+export function setFolderMeta(folderId: string, meta: FolderMeta): void {
+  writeJSON(`folder-meta-${folderId}.json`, meta)
 }

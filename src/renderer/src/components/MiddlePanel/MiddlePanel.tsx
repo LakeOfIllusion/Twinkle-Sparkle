@@ -24,6 +24,8 @@ interface MiddlePanelProps {
   onDismissError: () => void
   onDeleteAnnotation: (annotationId: string) => void
   onRenameAnnotation: (annotationId: string, customName: string) => void
+  onReSummarize: () => void
+  onFollowUp: (annotationId: string, question: string) => void
 }
 
 function MiddlePanel({
@@ -40,6 +42,8 @@ function MiddlePanel({
   onDismissError,
   onDeleteAnnotation,
   onRenameAnnotation,
+  onReSummarize,
+  onFollowUp,
 }: MiddlePanelProps) {
   const [inputValue, setInputValue] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('detail')
@@ -50,6 +54,7 @@ function MiddlePanel({
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Annotation | null>(null)
   const [scrollToAnnotationId, setScrollToAnnotationId] = useState<string | null>(null)
+  const [followUpTargetId, setFollowUpTargetId] = useState<string | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const editInputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -60,9 +65,13 @@ function MiddlePanel({
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   })
 
+  const prevCountRef = useRef(annotations.length)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [annotations, aiStatus])
+    if (annotations.length > prevCountRef.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    prevCountRef.current = annotations.length
+  }, [annotations])
 
   useEffect(() => {
     if (editingId && editInputRef.current) {
@@ -86,10 +95,23 @@ function MiddlePanel({
     })
   }, [scrollToAnnotationId, viewMode])
 
+  useEffect(() => {
+    if (!followUpTargetId) return
+    const target = annotations.find(a => a.id === followUpTargetId)
+    if (!target || target.selectedText !== selectedText) {
+      setFollowUpTargetId(null)
+    }
+  }, [selectedText, annotations, followUpTargetId])
+
   const handleSend = () => {
     const trimmed = inputValue.trim()
     if (!trimmed || aiStatus === 'loading') return
-    onSendMessage(trimmed)
+    if (followUpTargetId) {
+      onFollowUp(followUpTargetId, trimmed)
+      setFollowUpTargetId(null)
+    } else {
+      onSendMessage(trimmed)
+    }
     setInputValue('')
   }
 
@@ -194,19 +216,27 @@ function MiddlePanel({
   const currentContextMenuAnnotationId = contextMenu?.annotationId
 
   const contextMenuItems = contextMenu
-    ? (isInManageView
-        ? [
+    ? (() => {
+        const ann = annotations.find(a => a.id === currentContextMenuAnnotationId)
+        if (isInManageView) {
+          return [
             { label: '重命名', onClick: () => startRename(currentContextMenuAnnotationId!) },
             { label: '删除', onClick: handleDeleteClick, danger: true },
           ]
-        : [
-            { label: '定位到原文', onClick: () => {
-                const ann = annotations.find(a => a.id === currentContextMenuAnnotationId)
-                if (ann) onLocateAnnotation(ann.selectedText)
-                setContextMenu(null)
-              }},
-            { label: '编辑批注', onClick: () => startEdit(currentContextMenuAnnotationId!) },
-          ])
+        }
+        if (ann?.type === 'summary') {
+          return [
+            { label: '重新总结', onClick: () => { onReSummarize(); setContextMenu(null) } },
+          ]
+        }
+        return [
+          { label: '定位到原文', onClick: () => {
+              if (ann) onLocateAnnotation(ann.selectedText)
+              setContextMenu(null)
+            }},
+          { label: '编辑批注', onClick: () => startEdit(currentContextMenuAnnotationId!) },
+        ]
+      })()
     : []
 
   return (
@@ -249,7 +279,9 @@ function MiddlePanel({
               </div>
             )}
 
-            {sortedAnnotations.map((a) => {
+            {(() => {
+              let num = 0
+              return sortedAnnotations.map((a) => {
               const isSummary = a.type === 'summary'
 
               if (isSummary) {
@@ -277,6 +309,7 @@ function MiddlePanel({
                 )
               }
 
+              num += 1
               return (
                 <div
                   key={a.id}
@@ -284,6 +317,7 @@ function MiddlePanel({
                   className={styles.annotationGroup}
                   onContextMenu={(e) => handleContextMenu(e, a.id)}
                 >
+                  <div className={styles.summaryLabel}>{num}</div>
                   {editingId === a.id ? (
                     <div className={`${styles.bubble} ${styles.userBubble} ${styles.editBubble}`}>
                       <textarea
@@ -302,17 +336,25 @@ function MiddlePanel({
                   ) : (
                     <div
                       className={`${styles.bubble} ${styles.userBubble} ${styles.clickableBubble}`}
-                      onClick={() => onSelectAnnotationText(a.selectedText)}
+                      onClick={() => { onSelectAnnotationText(a.selectedText); setFollowUpTargetId(a.id) }}
                     >
                       {a.userMessage}
                     </div>
                   )}
                   <div
                     className={`${styles.bubble} ${styles.aiBubble} ${styles.clickableBubble}`}
-                    onClick={() => onSelectAnnotationText(a.selectedText)}
+                    onClick={() => { onSelectAnnotationText(a.selectedText); setFollowUpTargetId(a.id) }}
                   >
                     {a.aiResponse || (aiStatus === 'loading' && !a.aiResponse ? '...' : '')}
                   </div>
+                  {a.followUpMessages?.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`${styles.bubble} ${msg.role === 'user' ? styles.userBubble : styles.aiBubble}`}
+                    >
+                      {msg.content}
+                    </div>
+                  ))}
                   <button
                     className={`${styles.inlineStar} ${a.isFavorite ? styles.favorited : ''}`}
                     title={a.isFavorite ? '取消收藏' : '点亮批注'}
@@ -322,18 +364,7 @@ function MiddlePanel({
                   </button>
                 </div>
               )
-            })}
-
-            {aiStatus === 'loading' && (
-              <div className={styles.loadingWrapper}>
-                <div className={styles.loadingDots}>
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                  <span className={styles.dot} />
-                </div>
-                <span className={styles.loadingText}>思考中……</span>
-              </div>
-            )}
+            })})()}
 
             <div ref={chatEndRef} />
           </div>

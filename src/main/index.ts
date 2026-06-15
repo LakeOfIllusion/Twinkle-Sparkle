@@ -13,7 +13,9 @@ import {
   addAnnotation,
   toggleFavorite,
   updateAnnotation,
-  removeAnnotation
+  removeAnnotation,
+  getFolderMeta,
+  setFolderMeta
 } from './store'
 
 let mainWindow: BrowserWindow | null = null
@@ -68,6 +70,11 @@ ipcMain.handle('store:update-annotation', (_e, id, literatureId, updates) => upd
 ipcMain.handle('store:remove-annotation', (_e, id, literatureId) => removeAnnotation(id, literatureId))
 ipcMain.handle('store:toggle-favorite', (_e, id, literatureId) => toggleFavorite(id, literatureId))
 ipcMain.handle('store:update-literature', (_e, id, updates) => updateLiterature(id, updates))
+ipcMain.handle('store:get-folder-meta', (_e, folderId) => getFolderMeta(folderId))
+ipcMain.handle('store:set-folder-meta', (_e, folderId, meta) => {
+  setFolderMeta(folderId, meta)
+  return getFolderMeta(folderId)
+})
 ipcMain.handle('dialog:select-pdf', async () => {
   const { dialog } = await import('electron')
   const result = await dialog.showOpenDialog({
