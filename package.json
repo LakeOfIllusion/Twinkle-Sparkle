@@ -6,7 +6,23 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
-    "preview": "electron-vite preview"
+    "preview": "electron-vite preview",
+    "pack": "electron-builder --win",
+    "dist": "electron-vite build && electron-builder --win"
+  },
+  "build": {
+    "appId": "com.twinklesparkle.app",
+    "productName": "Twinkle Sparkle",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "zip"
+    }
   },
   "dependencies": {
     "html2canvas": "^1.4.1",
