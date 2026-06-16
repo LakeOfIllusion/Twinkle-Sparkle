@@ -2,6 +2,49 @@ import { useState, useRef, useCallback } from 'react'
 import html2canvas from 'html2canvas'
 import styles from './CardEditWindow.module.css'
 
+// 原文显示框（所有配色通用）
+import essaySentenceSvg from '../../assets/reading-card/essay sentence.svg'
+
+// 配色 1（默认）
+import s1User from '../../assets/reading-card/1.default-user annotation.svg'
+import s1Ai from '../../assets/reading-card/1.default-AI reply.svg'
+import s1Summary from '../../assets/reading-card/1.default-AI summary.svg'
+// 配色 2（粉色）
+import s2User from '../../assets/reading-card/2.pink-user annotation.svg'
+import s2Ai from '../../assets/reading-card/2.pink-AI reply.svg'
+import s2Summary from '../../assets/reading-card/2.pink-AI summary.svg'
+// 配色 3（浅紫）
+import s3User from '../../assets/reading-card/3.purple-user annotation.svg'
+import s3Ai from '../../assets/reading-card/3.purple-AI reply.svg'
+import s3Summary from '../../assets/reading-card/3.purple-AI summary.svg'
+// 配色 4（绿色）
+import s4User from '../../assets/reading-card/4.green-user annotation.svg'
+import s4Ai from '../../assets/reading-card/4.green-AI reply.svg'
+import s4Summary from '../../assets/reading-card/4.green-AI summary.svg'
+// 配色 5（蓝色）
+import s5User from '../../assets/reading-card/5.blue-user annotation.svg'
+import s5Ai from '../../assets/reading-card/5.blue-AI reply.svg'
+import s5Summary from '../../assets/reading-card/5.blue-AI summary.svg'
+// 配色 6（浅棕）
+import s6User from '../../assets/reading-card/6.light brown-user annotation.svg'
+import s6Ai from '../../assets/reading-card/6.light brown-AI reply.svg'
+import s6Summary from '../../assets/reading-card/6.light brown-AI summary.svg'
+
+interface SchemeSvgs {
+  userBubble: string
+  aiBubble: string
+  summary: string
+}
+
+const SCHEME_SVGS: SchemeSvgs[] = [
+  { userBubble: s1User, aiBubble: s1Ai, summary: s1Summary },
+  { userBubble: s2User, aiBubble: s2Ai, summary: s2Summary },
+  { userBubble: s3User, aiBubble: s3Ai, summary: s3Summary },
+  { userBubble: s4User, aiBubble: s4Ai, summary: s4Summary },
+  { userBubble: s5User, aiBubble: s5Ai, summary: s5Summary },
+  { userBubble: s6User, aiBubble: s6Ai, summary: s6Summary },
+]
+
 interface CardAnnotation {
   selectedText: string
   userMessage: string
@@ -72,6 +115,7 @@ function CardEditWindow({ readingGoalTitle, literatureTitles, favoriteAnnotation
   const cardRef = useRef<HTMLDivElement>(null)
 
   const scheme = COLOR_SCHEMES[colorIdx]
+  const svgs = SCHEME_SVGS[colorIdx]
   const annotation = favoriteAnnotations[annoIndex] || null
   const hasAnnotations = favoriteAnnotations.length > 0
 
@@ -153,13 +197,13 @@ function CardEditWindow({ readingGoalTitle, literatureTitles, favoriteAnnotation
                 </div>
                 {hasAnnotations && annotation ? (
                   <>
-                    <div className={styles.quoteBox} style={{ background: scheme.quoteBox, color: scheme.other }}>
+                    <div className={styles.quoteBox} style={{ backgroundImage: `url(${essaySentenceSvg})`, backgroundSize: '100% 100%', color: scheme.other }}>
                       {annotation.selectedText}
                     </div>
-                    <div className={styles.userBubbleCard} style={{ background: scheme.userBubble, color: scheme.other }}>
+                    <div className={styles.userBubbleCard} style={{ backgroundImage: `url(${svgs.userBubble})`, backgroundSize: '100% 100%', color: scheme.other }}>
                       {annotation.userMessage}
                     </div>
-                    <div className={styles.aiBubbleCard} style={{ background: scheme.aiBubble, color: scheme.other }}>
+                    <div className={styles.aiBubbleCard} style={{ backgroundImage: `url(${svgs.aiBubble})`, backgroundSize: '100% 100%', color: scheme.other }}>
                       {annotation.aiResponse}
                     </div>
                   </>
@@ -187,7 +231,7 @@ function CardEditWindow({ readingGoalTitle, literatureTitles, favoriteAnnotation
                 ) : (
                   <div
                     className={styles.summaryBox}
-                    style={{ background: scheme.summary, color: scheme.other }}
+                    style={{ backgroundImage: `url(${svgs.summary})`, backgroundSize: '100% 100%', color: scheme.other }}
                     onClick={() => setEditing('summary')}
                   >
                     {summary || '暂无总结'}

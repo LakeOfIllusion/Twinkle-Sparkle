@@ -4,3 +4,4 @@ dist/
 *.log
 .env
 .claude/
+需求描述/

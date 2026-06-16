@@ -123,41 +123,37 @@
 /* ── Card bubble replicas ─────────────────────── */
 
 .quoteBox {
-  padding: 14px 16px;
+  padding: 14px 16px 22px 16px;
   font-size: 13px;
   line-height: 1.5;
   border-radius: 12px;
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
   word-break: break-all;
   white-space: pre-wrap;
 }
 
 .userBubbleCard {
-  padding: 14px 16px;
+  padding: 14px 16px 22px 16px;
   font-size: 13px;
   line-height: 1.5;
   border-radius: 12px;
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
   word-break: break-all;
   white-space: pre-wrap;
 }
 
 .aiBubbleCard {
-  padding: 14px 16px;
+  padding: 14px 16px 22px 16px;
   font-size: 13px;
   line-height: 1.5;
   border-radius: 12px;
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
   word-break: break-all;
   white-space: pre-wrap;
 }
 
 .summaryBox {
-  padding: 14px 16px;
+  padding: 14px 16px 22px 16px;
   font-size: 13px;
   line-height: 1.6;
   border-radius: 12px;
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
   word-break: break-all;
   white-space: pre-wrap;
   cursor: pointer;
